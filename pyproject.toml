@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pick"
+version = "0.1.0"
+description = "A quickshell configration for a Dynamic Island inspired notch."
+requires-python = ">=3.12"
+
+[project.scripts]
+pick = "pick.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pick*"]
+
+[tool.setuptools.package-data]
+pick = ["qml/**/*"]
