@@ -6,20 +6,24 @@ import "Modules"
 PanelWindow {
     id: window
 
-    readonly property int collapsedWidth: 145
-    readonly property int collapsedHeight: 32
-    readonly property int expandedWidth: 520
-    readonly property int expandedHeight: 386
-    readonly property int cornerWing: 16
-    readonly property int canvasWidth: 552
-    readonly property int canvasHeight: 450
-    readonly property real targetWidth: expanded ? expandedWidth : collapsedWidth
-    readonly property real targetHeight: expanded ? expandedHeight : collapsedHeight
+    readonly property int collapsedWidth: Config.collapsedWidth
+    readonly property int collapsedHeight: Config.collapsedHeight
+    readonly property int expandedWidth: Config.expandedWidth
+    readonly property int expandedHeight: Config.expandedHeight
+    readonly property int cornerWing: Config.cornerWing
+    readonly property int canvasWidth: Config.canvasWidth
+    readonly property int canvasHeight: Config.canvasHeight
     readonly property color fill: "#000000"
     readonly property color foreground: "#ffffff"
-    readonly property int radius: 15
+    readonly property int radius: Config.radius
     property bool expanded: false
     property bool hovered: false
+
+    readonly property bool showFlow: flow.isPlaying && !expanded && !hovered
+    readonly property real infoWidth: Math.max(collapsedWidth, statusRow.implicitWidth + 24)
+    readonly property real collapsedTargetWidth: showFlow ? flow.pillWidth : infoWidth
+    readonly property real targetWidth: expanded ? expandedWidth : collapsedTargetWidth
+    readonly property real targetHeight: expanded ? expandedHeight : collapsedHeight
 
     margins.left: Math.round((screen.width - canvasWidth) / 2)
     implicitWidth: canvasWidth
@@ -140,6 +144,32 @@ PanelWindow {
             onClicked: window.expanded = !window.expanded
             onEntered: window.hovered = true
             onExited: window.hovered = false
+        }
+
+        Item {
+            anchors.fill: parent
+            clip: true
+
+            Flow {
+                id: flow
+
+                mode: window.expanded ? "panel" : "pill"
+                width: window.showFlow ? flow.pillWidth : parent.width
+                height: window.showFlow ? flow.pillHeight : parent.height
+                anchors.centerIn: parent
+                visible: window.showFlow || window.expanded
+            }
+
+            Row {
+                id: statusRow
+
+                spacing: 14
+                anchors.centerIn: parent
+                visible: !window.showFlow && !window.expanded
+
+                Clock {}
+                Battery {}
+            }
         }
 
         Behavior on width {

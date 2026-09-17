@@ -1,0 +1,16 @@
+{
+  "collapsedWidth": 150,
+  "collapsedHeight": 35,
+  "expandedWidth": 550,
+  "expandedHeight": 390,
+  "cornerWing": 16,
+  "canvasWidth": 552,
+  "canvasHeight": 450,
+  "radius": 15,
+  "trayMaxSize": 32,
+  "trayMinSize": 18,
+  "trayFalloff": 1.4,
+  "clockFormat": 12,
+  "clockShowSeconds": true,
+  "flowMaxWidth": 380
+}

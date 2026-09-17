@@ -1,15 +1,16 @@
 import QtQuick
 import Quickshell
 import Quickshell.Services.SystemTray
+import "../"
 
 Item {
     id: trayRoot
 
     property bool active: false
     property real focusIndex: 0
-    readonly property real maxSize: 32
-    readonly property real minSize: 18
-    readonly property real falloff: 1.4
+    readonly property real maxSize: Config.trayMaxSize
+    readonly property real minSize: Config.trayMinSize
+    readonly property real falloff: Config.trayFalloff
     property bool rowHovered: false
 
     implicitWidth: trayRow.implicitWidth
@@ -60,10 +61,10 @@ Item {
                 readonly property real magnify: trayRoot.rowHovered ? Math.max(0, 1 - distance / trayRoot.falloff) : 0
                 readonly property real targetSize: trayRoot.minSize + (trayRoot.maxSize - trayRoot.minSize) * magnify
 
-                width: targetSize
-                height: targetSize
-                radius: 10
-                color: "#222222"
+                width: targetSize + 5
+                height: targetSize + 5
+                radius: 50
+                color: "#0e0e0e"
 
                 Behavior on width {
                     NumberAnimation {
@@ -80,8 +81,8 @@ Item {
 
                 Image {
                     anchors.centerIn: parent
-                    width: parent.width - 6
-                    height: parent.height - 6
+                    width: parent.width
+                    height: parent.height
                     fillMode: Image.PreserveAspectFit
                     source: trayItemDelegate.modelData.icon
                     sourceSize.width: width

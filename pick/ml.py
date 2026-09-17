@@ -2,35 +2,35 @@ import shutil
 from importlib.resources import files
 from pathlib import Path
 
-QML_DEST = Path.home() / ".config/quickshell/pick"
+DEFAULT_CONFIG_DIR = Path.home() / ".config/pick"
 
 
-def install_qml(force: bool = False):
+def install_qml(dest: Path, force: bool = False):
     src = files("pick") / "qml"
 
-    if QML_DEST.exists() and not force:
-        print(f"{QML_DEST} already exists. Use --force to overwrite.")
+    if dest.exists() and not force:
+        print(f"{dest} already exists. Use --force to overwrite.")
         return
 
-    shutil.copytree(src, QML_DEST, dirs_exist_ok=True)
-    print(f"Installed QML config to {QML_DEST}")
+    shutil.copytree(src, dest, dirs_exist_ok=True)
+    print(f"Installed QML config to {dest}")
 
 
-def uninstall_qml(confirm: bool = True) -> bool:
-    if not QML_DEST.exists():
-        print(f"Nothing to uninstall — {QML_DEST} does not exist.")
+def uninstall_qml(dest: Path, confirm: bool = True) -> bool:
+    if not dest.exists():
+        print(f"Nothing to uninstall — {dest} does not exist.")
         return False
 
     if confirm:
-        answer = input(f"Remove {QML_DEST}? [y/N] ").strip().lower()
+        answer = input(f"Remove {dest}? [y/N] ").strip().lower()
         if answer != "y":
             print("Uninstall cancelled.")
             return False
 
-    if QML_DEST.is_symlink():
-        QML_DEST.unlink()
+    if dest.is_symlink():
+        dest.unlink()
     else:
-        shutil.rmtree(QML_DEST)
+        shutil.rmtree(dest)
 
-    print(f"Removed {QML_DEST}")
+    print(f"Removed {dest}")
     return True
