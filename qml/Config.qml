@@ -20,7 +20,9 @@ Singleton {
     property alias trayFalloff: adapter.trayFalloff
     property alias clockFormat: adapter.clockFormat
     property alias clockShowSeconds: adapter.clockShowSeconds
-    property alias flowMaxWidth: adapter.flowMaxWidth
+    property alias calendarFolders: adapter.calendarFolders
+    property alias calendarFirstWeekday: adapter.calendarFirstWeekday
+    property alias systemInterval: adapter.systemInterval
 
     FileView {
         path: Qt.resolvedUrl("config.json")
@@ -32,18 +34,23 @@ Singleton {
             id: adapter
             property int collapsedWidth: 145
             property int collapsedHeight: 32
-            property int expandedWidth: 520
-            property int expandedHeight: 420
+            property int expandedWidth: 550
+            property int expandedHeight: 440
             property int cornerWing: 16
             property int canvasWidth: 552
-            property int canvasHeight: 480
+            property int canvasHeight: 500
             property int radius: 15
             property real trayMaxSize: 32
             property real trayMinSize: 18
             property real trayFalloff: 1.4
             property int clockFormat: 12
             property bool clockShowSeconds: true
-            property int flowMaxWidth: 380
+            // Comma separated .ics folders for the Calendar tab.
+            property string calendarFolders: "~/Calendar,~/.local/share/calendar"
+            // 1 = Monday ... 7 = Sunday
+            property int calendarFirstWeekday: 1
+            // System tab sample interval in milliseconds.
+            property int systemInterval: 2000
         }
     }
 }

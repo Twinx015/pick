@@ -2,15 +2,17 @@
   "collapsedWidth": 150,
   "collapsedHeight": 35,
   "expandedWidth": 550,
-  "expandedHeight": 420,
+  "expandedHeight": 440,
   "cornerWing": 16,
   "canvasWidth": 552,
-  "canvasHeight": 480,
+  "canvasHeight": 500,
   "radius": 15,
   "trayMaxSize": 32,
   "trayMinSize": 18,
   "trayFalloff": 1.4,
   "clockFormat": 12,
   "clockShowSeconds": true,
-  "flowMaxWidth": 380
+  "calendarFolders": "~/Calendar,~/.local/share/calendar",
+  "calendarFirstWeekday": 1,
+  "systemInterval": 2000
 }

@@ -19,11 +19,61 @@ PanelWindow {
     property bool expanded: false
     property bool hovered: false
 
-    readonly property bool showFlow: flow.isPlaying && !expanded && !hovered
+    // ------------------------------------------------ tabs
+
+    // Sections shown inside the expanded notch, cycled with Tab / Shift+Tab.
+    readonly property var tabs: [
+        {
+            "key": "control",
+            "label": "Control",
+            "icon": "󰘮" // md-tune
+        },
+        {
+            "key": "media",
+            "label": "Media",
+            "icon": "󰲸" // md-playlist_music
+        },
+        {
+            "key": "calendar",
+            "label": "Calendar",
+            "icon": "󰸗" // md-calendar_month
+        },
+        {
+            "key": "system",
+            "label": "System",
+            "icon": "󰕮" // md-view_dashboard
+        }
+    ]
+    property int tabIndex: 0
+
+    readonly property string activeTab: tabs[tabIndex].key
+
+    function setTab(key) {
+        for (let i = 0; i < window.tabs.length; i++) {
+            if (window.tabs[i].key === key) {
+                window.tabIndex = i;
+                return;
+            }
+        }
+    }
+
+    function cycleTab(direction) {
+        const count = window.tabs.length;
+        window.tabIndex = (window.tabIndex + direction + count) % count;
+    }
+
+    // ------------------------------------------------ geometry
+
+    readonly property bool showMedia: media.hasSession && media.isPlaying && !expanded && !hovered
     readonly property real infoWidth: Math.max(collapsedWidth, statusRow.implicitWidth + 24)
-    readonly property real collapsedTargetWidth: showFlow ? flow.pillWidth : infoWidth
+    readonly property real collapsedTargetWidth: showMedia ? media.pillWidth : infoWidth
     readonly property real targetWidth: expanded ? expandedWidth : collapsedTargetWidth
     readonly property real targetHeight: expanded ? expandedHeight : collapsedHeight
+
+    readonly property int tabBarHeight: 26
+    readonly property int tabBarTop: 10
+    readonly property int contentTop: tabBarTop + tabBarHeight + 10
+    readonly property int contentInset: 12
 
     margins.left: Math.round((screen.width - canvasWidth) / 2)
     implicitWidth: canvasWidth
@@ -48,6 +98,13 @@ PanelWindow {
         Keys.onPressed: event => {
             if (event.key === Qt.Key_Escape) {
                 window.expanded = false;
+                event.accepted = true;
+                return;
+            }
+            if (!window.expanded)
+                return;
+            if (event.key === Qt.Key_Tab || event.key === Qt.Key_Backtab) {
+                window.cycleTab(event.key === Qt.Key_Tab && !(event.modifiers & Qt.ShiftModifier) ? 1 : -1);
                 event.accepted = true;
             }
         }
@@ -150,15 +207,17 @@ PanelWindow {
             anchors.fill: parent
             clip: true
 
-            Flow {
-                id: flow
+            // ------------------------------------------------ collapsed
+
+            Media {
+                id: media
 
                 mode: window.expanded ? "panel" : "pill"
-                x: window.expanded ? 12 : Math.max(0, (parent.width - width) / 2)
-                y: window.expanded ? 10 : Math.max(0, (parent.height - flow.pillHeight) / 2)
-                width: window.expanded ? parent.width - 24 : (window.showFlow ? flow.pillWidth : parent.width)
-                height: window.expanded ? 96 : flow.pillHeight
-                visible: window.showFlow || window.expanded
+                x: window.expanded ? window.contentInset : Math.max(0, (parent.width - width) / 2)
+                y: window.expanded ? window.contentTop : Math.max(0, (parent.height - media.pillHeight) / 2)
+                width: window.expanded ? parent.width - window.contentInset * 2 : (window.showMedia ? media.pillWidth : parent.width)
+                height: window.expanded ? Math.max(0, parent.height - window.contentTop - 12) : media.pillHeight
+                visible: window.expanded ? window.activeTab === "media" : window.showMedia
             }
 
             Row {
@@ -166,20 +225,57 @@ PanelWindow {
 
                 spacing: 14
                 anchors.centerIn: parent
-                visible: !window.showFlow && !window.expanded
+                visible: !window.showMedia && !window.expanded
 
                 Clock {}
                 Battery {}
             }
 
-            Control {
-                id: controlCenter
+            // ------------------------------------------------ expanded
 
-                x: 12
-                y: 116
-                width: parent.width - 24
-                height: window.expanded ? parent.height - y - 12 : 0
+            TabBar {
+                id: tabBar
+
+                x: window.contentInset
+                y: window.tabBarTop
+                width: parent.width - window.contentInset * 2
+                height: window.tabBarHeight
                 visible: window.expanded
+                tabs: window.tabs
+                currentIndex: window.tabIndex
+                tabHeight: window.tabBarHeight
+                onTabClicked: key => window.setTab(key)
+            }
+
+            Item {
+                id: contentArea
+
+                x: window.contentInset
+                y: window.contentTop
+                width: parent.width - window.contentInset * 2
+                height: Math.max(0, parent.height - window.contentTop - 12)
+                visible: window.expanded
+
+                Control {
+                    id: controlCenter
+
+                    anchors.fill: parent
+                    visible: window.activeTab === "control"
+                }
+
+                Calendar {
+                    id: calendarPanel
+
+                    anchors.fill: parent
+                    visible: window.activeTab === "calendar"
+                }
+
+                System {
+                    id: systemPanel
+
+                    anchors.fill: parent
+                    visible: window.activeTab === "system"
+                }
             }
         }
 
