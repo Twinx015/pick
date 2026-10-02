@@ -33,10 +33,10 @@ Singleton {
             property int collapsedWidth: 145
             property int collapsedHeight: 32
             property int expandedWidth: 520
-            property int expandedHeight: 386
+            property int expandedHeight: 420
             property int cornerWing: 16
             property int canvasWidth: 552
-            property int canvasHeight: 450
+            property int canvasHeight: 480
             property int radius: 15
             property real trayMaxSize: 32
             property real trayMinSize: 18

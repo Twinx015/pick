@@ -189,7 +189,7 @@ Item {
 
             anchors.horizontalCenter: parent.horizontalCenter
             width: parent.width - 40
-            height: parent.height * 0.2
+            height: Math.max(96, parent.height * 0.2)
             radius: 5
             color: "#0e0e0e"
             clip: true

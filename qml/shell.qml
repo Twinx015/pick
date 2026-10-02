@@ -141,7 +141,7 @@ PanelWindow {
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
-            onClicked: window.expanded = !window.expanded
+            onClicked: if (!window.expanded) window.expanded = true
             onEntered: window.hovered = true
             onExited: window.hovered = false
         }
@@ -154,9 +154,10 @@ PanelWindow {
                 id: flow
 
                 mode: window.expanded ? "panel" : "pill"
-                width: window.showFlow ? flow.pillWidth : parent.width
-                height: window.showFlow ? flow.pillHeight : parent.height
-                anchors.centerIn: parent
+                x: window.expanded ? 12 : Math.max(0, (parent.width - width) / 2)
+                y: window.expanded ? 10 : Math.max(0, (parent.height - flow.pillHeight) / 2)
+                width: window.expanded ? parent.width - 24 : (window.showFlow ? flow.pillWidth : parent.width)
+                height: window.expanded ? 96 : flow.pillHeight
                 visible: window.showFlow || window.expanded
             }
 
@@ -169,6 +170,16 @@ PanelWindow {
 
                 Clock {}
                 Battery {}
+            }
+
+            Control {
+                id: controlCenter
+
+                x: 12
+                y: 116
+                width: parent.width - 24
+                height: window.expanded ? parent.height - y - 12 : 0
+                visible: window.expanded
             }
         }
 
