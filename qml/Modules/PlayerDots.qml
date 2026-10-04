@@ -49,7 +49,10 @@ Row {
 
             MouseArea {
                 anchors.fill: parent
-                anchors.margins: -5
+                // Grow the hit area for easy clicking, but never past the
+                // halfway point to the neighbour dot -- otherwise the targets
+                // overlap and a click near the seam picks the wrong player.
+                anchors.margins: -Math.min(5, dots.dotSpacing / 2)
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onEntered: dot.hover = true

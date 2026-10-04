@@ -15,6 +15,13 @@ Row {
 
     spacing: 4
 
+    // Tabs divide the bar evenly instead of hugging their labels, so the strip
+    // reads as one segmented control across the notch.
+    readonly property int tabCount: tabs ? tabs.length : 0
+    readonly property real slotWidth: tabCount > 0
+        ? Math.max(0, (width - spacing * (tabCount - 1)) / tabCount)
+        : 0
+
     Repeater {
         model: bar.tabs
 
@@ -33,7 +40,7 @@ Row {
             property bool hover: false
 
             objectName: tab.spec.key
-            width: tabLabel.implicitWidth + bar.tabPadding * 2
+            width: bar.slotWidth
             height: bar.tabHeight
             radius: height / 2
             color: tab.active ? "#1e1e22" : (tab.hover ? "#18181b" : "transparent")
@@ -69,10 +76,14 @@ Row {
                     id: tabLabel
 
                     anchors.verticalCenter: parent.verticalCenter
+                    // Long labels stay inside their slot on a narrow notch.
+                    width: Math.min(implicitWidth, Math.max(0, tab.width - bar.tabPadding))
+                    horizontalAlignment: Text.AlignHCenter
                     text: tab.spec.label
                     color: tab.active ? "#f2f2f2" : "#9a9aa2"
                     font.pixelSize: 11
                     font.bold: tab.active
+                    elide: Text.ElideRight
                 }
             }
 

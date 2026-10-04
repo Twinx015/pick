@@ -12,6 +12,21 @@ Item {
 
     property int intervalMs: Config.systemInterval
 
+    // ------------------------------------------------ layout
+
+    // The panel is sized to fit the notch exactly rather than overflowing into
+    // a scrollbar, so these drive every section's height. tileH is derived so
+    // the six tiles absorb whatever the remaining panels don't use.
+    property int gap: 8
+    property int gridGap: 8
+    property int labelH: 15
+    property int storageH: 82
+    property int footerH: 40
+    property int tileRows: 3
+    readonly property int tileH: Math.max(46, Math.floor((height - (labelH + storageH + footerH)
+        - (gap * 3) - (gridGap * (tileRows - 1))) / tileRows))
+    readonly property real tileWidth: (width - gridGap) / 2
+
     // ------------------------------------------------ parsed state
 
     property real cpuPercent: 0
@@ -401,16 +416,17 @@ Item {
             id: body
 
             width: scroller.width
-            spacing: 10
+            spacing: sys.gap
 
             // ---- tile grid ----
             Grid {
                 width: parent.width
                 columns: 2
-                spacing: 10
+                spacing: sys.gridGap
 
                 Metric {
-                    width: (body.width - 10) / 2
+                    width: sys.tileWidth
+                    height: sys.tileH
                     iconText: "󰻠" // md-cpu_64_bit
                     valueText: sys.cpuPercent + "%"
                     labelText: "CPU"
@@ -420,7 +436,8 @@ Item {
                 }
 
                 Metric {
-                    width: (body.width - 10) / 2
+                    width: sys.tileWidth
+                    height: sys.tileH
                     iconText: "󰻠" // md-memory
                     valueText: sys.memKnown ? sys.bytes(sys.memUsed) : "--"
                     labelText: "RAM"
@@ -430,7 +447,8 @@ Item {
                 }
 
                 Metric {
-                    width: (body.width - 10) / 2
+                    width: sys.tileWidth
+                    height: sys.tileH
                     iconText: "󰘚" // md-chip
                     valueText: sys.romBytes >= 0 ? sys.bytes(sys.romBytes) : "--"
                     labelText: "ROM"
@@ -440,7 +458,8 @@ Item {
                 }
 
                 Metric {
-                    width: (body.width - 10) / 2
+                    width: sys.tileWidth
+                    height: sys.tileH
                     iconText: "󰓡" // md-swap_horizontal
                     valueText: sys.swapTotal > 0 ? sys.bytes(sys.swapUsed) : "off"
                     labelText: "Swap"
@@ -450,7 +469,8 @@ Item {
                 }
 
                 Metric {
-                    width: (body.width - 10) / 2
+                    width: sys.tileWidth
+                    height: sys.tileH
                     iconText: "󰓅" // md-speedometer
                     valueText: sys.loadAvg.split(" ")[0] || "--"
                     labelText: "Load average"
@@ -460,7 +480,8 @@ Item {
                 }
 
                 Metric {
-                    width: (body.width - 10) / 2
+                    width: sys.tileWidth
+                    height: sys.tileH
                     iconText: "󱎫" // md-timer
                     valueText: sys.uptimeSeconds >= 0 ? sys.duration(sys.uptimeSeconds) : "--"
                     labelText: "Uptime"
@@ -472,35 +493,43 @@ Item {
 
             // ---- storage ----
             Text {
+                width: parent.width
+                height: sys.labelH
                 text: "Storage"
                 color: "#9a9aa2"
                 font.pixelSize: 10
                 font.bold: true
+                elide: Text.ElideRight
             }
 
             Rectangle {
                 width: parent.width
-                height: Math.max(46, sys.filesystems.length * 40 + 16)
+                height: sys.storageH
                 radius: 9
                 color: "#101014"
                 border.color: "#242428"
                 border.width: 1
 
-                Column {
+                // Fixed height with its own scroller, so a machine with many
+                // mounts scrolls the list instead of pushing the rest of the
+                // panel past the bottom of the notch.
+                ListView {
+                    id: diskList
+
                     anchors.fill: parent
-                    anchors.margins: 8
-                    spacing: 8
+                    anchors.margins: 6
+                    clip: true
+                    spacing: 4
+                    model: sys.filesystems
+                    boundsBehavior: Flickable.StopAtBounds
 
-                    Repeater {
-                        model: sys.filesystems
+                    delegate: Item {
+                        id: disk
 
-                        delegate: Item {
-                            id: disk
+                        required property var modelData
 
-                            required property var modelData
-
-                            width: parent.width
-                            height: 32
+                        width: diskList.width
+                        height: 26
 
                             Text {
                                 id: diskIcon
@@ -588,20 +617,19 @@ Item {
                         }
                     }
 
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        visible: sys.filesystems.length === 0
-                        text: "No mounted filesystems reported"
-                        color: "#5f5f66"
-                        font.pixelSize: 10
-                    }
+                Text {
+                    anchors.centerIn: parent
+                    visible: sys.filesystems.length === 0
+                    text: "No mounted filesystems reported"
+                    color: "#5f5f66"
+                    font.pixelSize: 10
                 }
             }
 
             // ---- gpu / hardware footer ----
             Rectangle {
                 width: parent.width
-                height: 46
+                height: sys.footerH
                 radius: 9
                 color: "#101014"
                 border.color: "#242428"

@@ -23,6 +23,8 @@ Singleton {
     property alias calendarFolders: adapter.calendarFolders
     property alias calendarFirstWeekday: adapter.calendarFirstWeekday
     property alias systemInterval: adapter.systemInterval
+    property alias mediaIgnore: adapter.mediaIgnore
+    property alias mediaShowPaused: adapter.mediaShowPaused
 
     FileView {
         path: Qt.resolvedUrl("config.json")
@@ -51,6 +53,12 @@ Singleton {
             property int calendarFirstWeekday: 1
             // System tab sample interval in milliseconds.
             property int systemInterval: 2000
+            // Comma separated player ids to hide. Browsers implement MPRIS for
+            // tab audio, so without this they take over the collapsed pill and
+            // the dot switcher shows tabs instead of players.
+            property string mediaIgnore: "firefox,firefox-esr,librewolf,zen,chromium,chromium-browser,chrome,google-chrome,brave,brave-browser,vivaldi,vivaldi-stable,opera,edge,msedge,qutebrowser,epiphany,midori,falkon"
+            // Keep the pill visible while a track is loaded but paused.
+            property bool mediaShowPaused: true
         }
     }
 }

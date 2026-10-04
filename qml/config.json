@@ -14,5 +14,7 @@
   "clockShowSeconds": true,
   "calendarFolders": "~/Calendar,~/.local/share/calendar",
   "calendarFirstWeekday": 1,
-  "systemInterval": 2000
+  "systemInterval": 2000,
+  "mediaIgnore": "firefox,firefox-esr,librewolf,zen,chromium,chromium-browser,chrome,google-chrome,brave,brave-browser,vivaldi,vivaldi-stable,opera,edge,msedge,qutebrowser,epiphany,midori,falkon",
+  "mediaShowPaused": true
 }

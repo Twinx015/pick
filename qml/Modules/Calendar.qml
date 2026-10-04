@@ -8,7 +8,24 @@ Item {
     id: cal
 
     property int firstWeekday: Config.calendarFirstWeekday
-    property int cellHeight: 30
+
+    // Section heights. The month grid gets a capped cell height so it can't
+    // starve the agenda underneath it, which is where the actual events are.
+    property int headerH: 26
+    property int weekdaysH: 14
+    property int dividerH: 1
+    property int labelH: 15
+    property int gapH: 6
+    property int minCell: 22
+    property int maxCell: 30
+    property int minAgenda: 84
+
+    // layout Column insets by 4 on every side and spaces its 5 children.
+    readonly property int innerH: Math.max(0, cal.height - 8)
+    readonly property int fixedH: cal.headerH + cal.weekdaysH + cal.dividerH + cal.labelH + cal.gapH * 4
+    readonly property int cellHeight: Math.max(cal.minCell, Math.min(cal.maxCell,
+        Math.floor((cal.innerH - cal.fixedH - cal.minAgenda) / 6)))
+    readonly property int agendaH: Math.max(0, cal.innerH - cal.fixedH - cal.cellHeight * 6)
 
     CalendarData {
         id: calData
@@ -97,7 +114,7 @@ Item {
         // ---- month header ----
         Item {
             width: parent.width
-            height: 26
+            height: cal.headerH
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
@@ -184,8 +201,9 @@ Item {
         }
 
         // ---- weekday labels ----
-        Row {
+        Item {
             width: parent.width
+            height: cal.weekdaysH
 
             Repeater {
                 model: 7
@@ -194,6 +212,8 @@ Item {
                     required property int index
 
                     width: layout.width / 7
+                    height: cal.weekdaysH
+                    verticalAlignment: Text.AlignVCenter
                     horizontalAlignment: Text.AlignHCenter
                     text: {
                         // Qt dayNames start at Monday; rotate to match firstWeekday.
@@ -211,6 +231,7 @@ Item {
         // ---- month grid ----
         Grid {
             width: parent.width
+            height: cal.cellHeight * 6
             columns: 7
 
             Repeater {
@@ -283,24 +304,27 @@ Item {
 
         Rectangle {
             width: parent.width
-            height: 1
+            height: cal.dividerH
             color: "#1f1f23"
         }
 
         // ---- agenda for the selected day ----
         Text {
             width: parent.width
+            height: cal.labelH
             text: cal.selectedLabel
             color: "#9a9aa2"
             font.pixelSize: 10
             font.bold: true
+            verticalAlignment: Text.AlignVCenter
+            elide: Text.ElideRight
         }
 
         Item {
             id: agendaBox
 
             width: parent.width
-            height: Math.max(0, layout.height - y)
+            height: cal.agendaH
 
             ListView {
                 id: agenda
@@ -352,9 +376,12 @@ Item {
                     elide: Text.ElideRight
                 }
             }
-        }
+            }
 
-        Text {
+            // Empty state lives inside agendaBox rather than the Column: a
+            // Positioner assigns child positions itself, so anchors on its
+            // children are ignored.
+            Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
                 width: parent.width - 20

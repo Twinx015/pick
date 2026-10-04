@@ -17,12 +17,70 @@ Item {
 
     // ------------------------------------------------ player discovery
 
-    readonly property var players: Mpris.players.values
-    readonly property int playerCount: players ? players.length : 0
+    // Everything MPRIS advertises, including browsers.
+    readonly property var allPlayers: Mpris.players.values
+
+    // Configured ids to hide, lowercased once.
+    readonly property var ignoreList: {
+        const raw = Config.mediaIgnore;
+        if (!raw)
+            return [];
+        return raw.split(",").map(s => s.trim().toLowerCase()).filter(s => s.length > 0);
+    }
+
+    // Browser bus names carry a per-window instance suffix, so compare on the
+    // first path element: org.mpris.MediaPlayer2.<key>[.instance...].
+    function playerKey(p) {
+        const m = /^org\.mpris\.mediaplayer2\.([^.]+)/i.exec(p.dbusName || "");
+        return m ? m[1].toLowerCase() : "";
+    }
+
+    function isIgnored(p) {
+        if (!p || media.ignoreList.length === 0)
+            return false;
+        const entry = (p.desktopEntry || "").toLowerCase().replace(/\.desktop$/, "");
+        const ident = (p.identity || "").toLowerCase();
+        const key = media.playerKey(p);
+        for (let i = 0; i < media.ignoreList.length; i++) {
+            const t = media.ignoreList[i];
+            if (key === t || entry === t || ident === t)
+                return true;
+        }
+        return false;
+    }
+
+    readonly property var players: {
+        media.rev;
+        const all = media.allPlayers;
+        if (!all)
+            return [];
+        const kept = [];
+        for (let i = 0; i < all.length; i++) {
+            if (!media.isIgnored(all[i]))
+                kept.push(all[i]);
+        }
+        return kept;
+    }
+
+    readonly property int playerCount: players.length
 
     // Set once the user picks a dot; empty means "follow whatever is playing".
     property string pinnedName: ""
     property int rev: 0
+
+    // Prefer a player that is both playing and has a track. Browsers otherwise
+    // win the "is playing" race and the pill flickers between them and a real
+    // player as each one's state changes.
+    function betterThan(a, b) {
+        if (!a)
+            return b;
+        if (!b)
+            return a;
+        const score = function (p) {
+            return (p.isPlaying === true ? 2 : 0) + (p.trackTitle !== "" ? 1 : 0);
+        };
+        return score(b) > score(a) ? b : a;
+    }
 
     readonly property var player: {
         media.rev;
@@ -35,15 +93,19 @@ Item {
                     return all[i];
             }
         }
-        for (let i = 0; i < all.length; i++) {
-            if (all[i].isPlaying === true)
-                return all[i];
-        }
-        return all[0];
+        let best = null;
+        for (let i = 0; i < all.length; i++)
+            best = media.betterThan(best, all[i]);
+        return best;
     }
 
     readonly property bool isPlaying: player !== null && player.isPlaying === true
-    readonly property bool hasSession: player !== null && (player.isPlaying === true || title !== "")
+    readonly property bool hasTrack: player !== null && player.trackTitle !== ""
+
+    // A session is "active" while a track is loaded, not only while playing, so
+    // the pill doesn't disappear every time playback pauses.
+    readonly property bool hasSession: player !== null
+        && (media.isPlaying || (Config.mediaShowPaused && media.hasTrack))
     readonly property bool canControl: player !== null && player.canControl === true
 
     readonly property string title: player !== null ? player.trackTitle : ""
@@ -104,6 +166,9 @@ Item {
             Connections {
                 target: modelData
                 function onIsPlayingChanged() {
+                    media.rev++;
+                }
+                function onTrackChanged() {
                     media.rev++;
                 }
             }
@@ -235,7 +300,9 @@ Item {
 
                     anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
-                    anchors.leftMargin: 4
+                    // Leave room for the album-art bloom to fade out before it
+                    // reaches the notch edge, otherwise it gets sliced off.
+                    anchors.leftMargin: 16
                     width: 84
                     height: 84
 
@@ -243,8 +310,8 @@ Item {
                         id: glowSource
 
                         anchors.centerIn: parent
-                        width: parent.width * 2.0
-                        height: parent.height * 2.0
+                        width: parent.width * 1.5
+                        height: parent.height * 1.5
                         source: media.artUrl
                         sourceSize: Qt.size(40, 40)
                         fillMode: Image.PreserveAspectCrop
@@ -260,7 +327,7 @@ Item {
                         blurEnabled: true
                         blur: 1.0
                         blurMax: 72
-                        opacity: media.artUrl !== "" ? 0.5 : 0
+                        opacity: media.artUrl !== "" ? 0.45 : 0
                     }
 
                     Rectangle {
@@ -350,13 +417,16 @@ Item {
                     anchors.right: parent.right
                     anchors.rightMargin: 4
                     anchors.verticalCenter: parent.verticalCenter
-                    spacing: 6
+                    spacing: 4
+                    // Collapses to nothing for a single player so the title
+                    // keeps the full width.
+                    visible: media.playerCount > 1
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: "Player"
-                        color: "#5f5f66"
-                        font.pixelSize: 9
+                        text: media.pinnedName !== "" ? "pinned" : "auto"
+                        color: "#4a4a50"
+                        font.pixelSize: 8
                     }
 
                     PlayerDots {
@@ -366,15 +436,6 @@ Item {
                         dotSize: 7
                         dotSpacing: 6
                         onPicked: name => media.selectPlayer(name)
-                    }
-
-                    Text {
-                        width: 140
-                        horizontalAlignment: Text.AlignHCenter
-                        text: media.playerCount > 1 ? (media.pinnedName !== "" ? "pinned" : "auto") : "1 player"
-                        color: "#4a4a50"
-                        font.pixelSize: 8
-                        elide: Text.ElideRight
                     }
                 }
             }

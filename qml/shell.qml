@@ -64,7 +64,9 @@ PanelWindow {
 
     // ------------------------------------------------ geometry
 
-    readonly property bool showMedia: media.hasSession && media.isPlaying && !expanded && !hovered
+    // Collapsed pill: shown while a track is loaded, not only while playing, so it
+    // doesn't blink on every pause.
+    readonly property bool showMedia: media.hasSession && !expanded && !hovered
     readonly property real infoWidth: Math.max(collapsedWidth, statusRow.implicitWidth + 24)
     readonly property real collapsedTargetWidth: showMedia ? media.pillWidth : infoWidth
     readonly property real targetWidth: expanded ? expandedWidth : collapsedTargetWidth
